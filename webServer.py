@@ -1,5 +1,6 @@
 # import socket module
 from socket import *
+# In order to terminate the program
 import sys
 
 def webServer(port=13331):
@@ -14,7 +15,7 @@ def webServer(port=13331):
         connectionSocket, addr = serverSocket.accept()  # Accept the connection from the client
         
         try:
-            message = connectionSocket.recv(1024).decode()  # Receive the message from the client
+            message = connectionSocket.recv(1024)  # Receive the message from the client
             filename = message.split()[1]
             
             # Open the client requested file
@@ -23,15 +24,15 @@ def webServer(port=13331):
             # Create a response header for 200 OK
             header = "HTTP/1.1 200 OK\r\n"
             header += "Content-Type: text/html; charset=UTF-8\r\n"
+            header += "Server: SimpleWebServer/1.0\r\n"  # Add Server header
+            header += "Connection: close\r\n"  # Add Connection header
             header += "\r\n"  # End of headers
             
-            connectionSocket.send(header.encode())  # Send header
-            
-            # Read the contents of the file and send it to the client
+            # Read the contents of the file and prepare the full response
             outputdata = f.read()
-            connectionSocket.send(outputdata)  # Send the content of the file
-
-            f.close()  # Close the file after sending it
+            response = header.encode() + outputdata  # Combine header and body
+            
+            connectionSocket.sendall(response)  # Send the complete response
             
             connectionSocket.close()  # Closing the connection socket
             
@@ -39,9 +40,13 @@ def webServer(port=13331):
             # Send response message for invalid request due to the file not being found (404)
             header = "HTTP/1.1 404 Not Found\r\n"
             header += "Content-Type: text/html; charset=UTF-8\r\n"
+            header += "Server: SimpleWebServer/1.0\r\n"  # Add Server header
+            header += "Connection: close\r\n"  # Add Connection header
             header += "\r\n"
-            connectionSocket.send(header.encode())  # Send header
-            connectionSocket.send(b"<html><body><h1>404 Not Found</h1></body></html>")  # Send body
+            body = "<html><body><h1>404 Not Found</h1></body></html>"
+            response = header.encode() + body.encode()  # Combine header and body
+            
+            connectionSocket.sendall(response)  # Send the complete response
             
             connectionSocket.close()  # Close client socket
 
